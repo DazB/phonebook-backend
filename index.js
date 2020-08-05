@@ -1,5 +1,4 @@
 const express = require('express')
-const { response } = require('express')
 const app = express()
 
 app.use(express.json())
@@ -55,11 +54,51 @@ app.get('/api/persons/:id', (req, res) => {
     }
 })
 
-app.delete('/api/persons/:id', (req,res) => {
+app.delete('/api/persons/:id', (req, res) => {
     const id = Number(req.params.id)
     persons = persons.filter(person => person.id !== id)
 
     res.status(204).end()
+})
+
+const generateId = () => {
+    return Math.floor(Math.random() * 99999); 
+}
+
+app.post('/api/persons', (req, res) => {
+    const body = req.body
+    
+    // If no name is included in body
+    if (!body.name) {
+        return res.status(400).json({
+            error: "hey babe what's your name",
+        })
+    }
+    
+    // If no number is included in body
+    if (!body.number) {
+        return res.status(400).json({
+            error: "hey babe what's your number",
+        })
+    }
+
+    // If name already exists
+    if (persons.map(person => person.name).includes(body.name)) {
+        return res.status(400).json({
+            error: `hey i've seen you before ${body.name}`,
+        })
+    }
+
+    // Validation all good. Add person to phonebook
+    const person = {
+        name: body.name,
+        number: body.number,
+        id: generateId()
+    }
+
+    persons = persons.concat(person)
+
+    res.json(person)
 })
 
 const PORT = 3001

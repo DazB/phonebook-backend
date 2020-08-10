@@ -1,10 +1,11 @@
-POST http://localhost:3001/api/persons
-Content-Type: application/json
+GET https://serene-dusk-41842.herokuapp.com/api/persons
+# POST http://localhost:3001/api/persons
+# Content-Type: application/json
 
-{
-    "name": "bob",
-    "number": "58430958"
-}
+# {
+#     "name": "bob",
+#     "number": "58430958"
+# }
 
 # DELETE http://localhost:3001/api/persons/2
 # GET http://localhost:3001/api/persons

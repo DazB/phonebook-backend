@@ -1,6 +1,8 @@
+require('dotenv').config()
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
 morgan.token('body', (req, res) => {
     if (req.method === 'POST') {
@@ -9,8 +11,10 @@ morgan.token('body', (req, res) => {
   })
 
 const app = express()
-
+// For GET requests, will check build folder if any static paths
+// match the request
 app.use(express.static('build'))
+// Content Origin Resource Sharing allowed 
 app.use(cors())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 app.use(express.json())
@@ -38,32 +42,34 @@ let persons = [
     },
 ]
 
+/**
+ * Routes
+ */
 app.get('/info', (req, res) => {
-    res.send(`
-        <div>
+    Person.find({}).then(persons => {
+        res.send(`
             <div>
-                Phonebook has info for ${persons.length} people
+                <div>
+                    Phonebook has info for ${persons.length} people
+                </div>
+                <div>
+                    ${new Date()}
+                </div>
             </div>
-            <div>
-                ${new Date()}
-            </div>
-        </div>
-    `)
+        `)
+    })
 })
 
 app.get('/api/persons', (req, res) => {
-    res.json(persons)
+    Person.find({}).then(persons => {
+        res.json(persons)
+    })
 })
 
 app.get('/api/persons/:id', (req, res) => {
-    const id = Number(req.params.id)
-    const person = persons.find(person => person.id === id)
-    
-    if (person) {
+    Person.findById(req.params.id).then(person => {
         res.json(person)
-    } else {
-        res.status(404).end()
-    }
+    })
 })
 
 app.delete('/api/persons/:id', (req, res) => {
@@ -94,26 +100,32 @@ app.post('/api/persons', (req, res) => {
         })
     }
 
-    // If name already exists
-    if (persons.map(person => person.name).includes(body.name)) {
-        return res.status(400).json({
-            error: `hey i've seen you before ${body.name}`,
-        })
-    }
+    // // If name already exists
+    // if (persons.map(person => person.name).includes(body.name)) {
+    //     return res.status(400).json({
+    //         error: `hey i've seen you before ${body.name}`,
+    //     })
+    // }
 
     // Validation all good. Add person to phonebook
-    const person = {
+    const person = new Person({
         name: body.name,
         number: body.number,
-        id: generateId()
-    }
+    })
 
-    persons = persons.concat(person)
-
-    res.json(person)
+    person.save().then(savedPerson => {
+        res.json(savedPerson)
+    })
 })
 
-const PORT = process.env.PORT || 3001
+// Goes here for unknown route. 404 message
+const unknownEndpoint = (req, res) => {
+    req.status(404).send({ error: 'unknown endpoint' })
+}
+  
+app.use(unknownEndpoint)
+
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })

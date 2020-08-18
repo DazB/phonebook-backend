@@ -3,6 +3,7 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
+const { response } = require('express')
 
 morgan.token('body', (req, res) => {
   if (req.method === 'POST') {
@@ -45,47 +46,50 @@ let persons = [
 /**
  * Routes
  */
-app.get('/info', (req, res) => {
-  Person.find({}).then(persons => {
-    res.send(`
-            <div>
-                <div>
-                    Phonebook has info for ${persons.length} people
-                </div>
-                <div>
-                    ${new Date()}
-                </div>
-            </div>
-        `)
-  })
+app.get('/info', (req, res, next) => {
+  Person
+    .find({})
+    .then(persons => {
+      res.send(`
+              <div>
+                  <div>
+                      Phonebook has info for ${persons.length} people
+                  </div>
+                  <div>
+                      ${new Date()}
+                  </div>
+              </div>
+          `)
+      })
+    .catch(error => next(error))
 })
 
-app.get('/api/persons', (req, res) => {
-  Person.find({}).then(persons => {
-    res.json(persons)
-  })
+app.get('/api/persons', (req, res, next) => {
+  Person
+    .find({})
+    .then(persons => {
+      res.json(persons)
+    })
+    .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (req, res) => {
-  Person.findById(req.params.id).then(person => {
-    res.json(person)
-  })
+app.get('/api/persons/:id', (req, res, next) => {
+  Person
+    .findById(req.params.id)
+    .then(person => {
+      res.json(person)
+    })
+    .catch(error => next(error))
 })
 
-app.delete('/api/persons/:id', (req, res) => {
-  Person.findByIdAndRemove(req.params.id)
+app.delete('/api/persons/:id', (req, res, next) => {
+  Person
+    .findByIdAndRemove(req.params.id)
     .then(result => {
       res.status(204).end()
     })
-    .catch(error => {
-      console.log(error)
-      res.status(400).send({ error: 'malformatted id' }) 
-    })
+    .catch(error => next(error))
 })
-
-const generateId = () => {
-  return Math.floor(Math.random() * 99999);
-}
 
 app.post('/api/persons', (req, res) => {
   const body = req.body
@@ -122,12 +126,25 @@ app.post('/api/persons', (req, res) => {
   })
 })
 
-// Goes here for unknown route. 404 message
+// handler of requests with unknown endpoint
 const unknownEndpoint = (req, res) => {
   req.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
+
+// handler of requests with result to errors
+const errorHandler = (error, req, res, next) => {
+  console.log(error.message)
+
+  if (error.name === 'CastError') {
+    return res.status(400).send( { error: 'malformatted id' })
+  }
+
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT
 app.listen(PORT, () => {

@@ -91,7 +91,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
     .catch(error => next(error))
 })
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
   // If no name is included in body
@@ -108,27 +108,39 @@ app.post('/api/persons', (req, res) => {
     })
   }
 
-  // // If name already exists
-  // if (persons.map(person => person.name).includes(body.name)) {
-  //     return res.status(400).json({
-  //         error: `hey i've seen you before ${body.name}`,
-  //     })
-  // }
-
   // Validation all good. Add person to phonebook
   const person = new Person({
     name: body.name,
     number: body.number,
   })
 
-  person.save().then(savedPerson => {
-    res.json(savedPerson)
-  })
+  person
+    .save()
+    .then(savedPerson => {
+      res.json(savedPerson)
+    })
+    .catch(error => next(error))
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+  const body = req.body
+
+  const person = {
+    name: body.name,
+    number: body.number,
+  }
+
+  Person
+    .findByIdAndUpdate(req.params.id, person, { new: true })
+    .then(updatedPerson => {
+      res.json(updatedPerson)
+    })
+    .catch(error => next(error))
 })
 
 // handler of requests with unknown endpoint
 const unknownEndpoint = (req, res) => {
-  req.status(404).send({ error: 'unknown endpoint' })
+  res.status(404).send({ error: 'unknown endpoint' })
 }
 
 app.use(unknownEndpoint)

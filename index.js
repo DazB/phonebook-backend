@@ -94,21 +94,21 @@ app.delete('/api/persons/:id', (req, res, next) => {
 app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
-  // If no name is included in body
-  if (!body.name) {
-    return res.status(400).json({
-      error: "hey babe what's your name",
-    })
-  }
+  // // If no name is included in body
+  // if (!body.name) {
+  //   return res.status(400).json({
+  //     error: "hey babe what's your name",
+  //   })
+  // }
 
-  // If no number is included in body
-  if (!body.number) {
-    return res.status(400).json({
-      error: "hey babe what's your number",
-    })
-  }
+  // // If no number is included in body
+  // if (!body.number) {
+  //   return res.status(400).json({
+  //     error: "hey babe what's your number",
+  //   })
+  // }
 
-  // Validation all good. Add person to phonebook
+  // Initial validation all good. Add person to phonebook
   const person = new Person({
     name: body.name,
     number: body.number,
@@ -151,6 +151,9 @@ const errorHandler = (error, req, res, next) => {
 
   if (error.name === 'CastError') {
     return res.status(400).send( { error: 'malformatted id' })
+  }
+  else if (error.name === 'ValidationError') {
+    return res.status(400).json({ error: error.message })
   }
 
   next(error)

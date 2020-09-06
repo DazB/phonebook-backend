@@ -3,9 +3,8 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const Person = require('./models/person')
-const { response } = require('express')
 
-morgan.token('body', (req, res) => {
+morgan.token('body', (req) => {
   if (req.method === 'POST') {
     return JSON.stringify(req.body)
   }
@@ -15,33 +14,10 @@ const app = express()
 // For GET requests, will check build folder if any static paths
 // match the request
 app.use(express.static('build'))
-// Content Origin Resource Sharing allowed 
+// Content Origin Resource Sharing allowed
 app.use(cors())
 app.use(morgan(':method :url :status :res[content-length] - :response-time ms :body'))
 app.use(express.json())
-
-let persons = [
-  {
-    name: "Arto Hellas",
-    number: "040-123456",
-    id: 1
-  },
-  {
-    name: "Ada Lovelace",
-    number: "39-44-5425436",
-    id: 2
-  },
-  {
-    name: "Dan Abramov",
-    number: "0432-3213-432",
-    id: 3
-  },
-  {
-    name: "Mary Poppendieck",
-    number: "040-12345643",
-    id: 4
-  },
-]
 
 /**
  * Routes
@@ -60,7 +36,7 @@ app.get('/info', (req, res, next) => {
                   </div>
               </div>
           `)
-      })
+    })
     .catch(error => next(error))
 })
 
@@ -85,7 +61,7 @@ app.get('/api/persons/:id', (req, res, next) => {
 app.delete('/api/persons/:id', (req, res, next) => {
   Person
     .findByIdAndRemove(req.params.id)
-    .then(result => {
+    .then(() => {
       res.status(204).end()
     })
     .catch(error => next(error))
